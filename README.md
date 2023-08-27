@@ -33,7 +33,7 @@ You may install the above dependencies simply by using:
 
 - Open the terminal in your code editor and type this in
 
-    `git clone https://github.com/GraphicsMonster/  LSTM-sentiment-analysis-model`
+    `git clone https://github.com/GraphicsMonster/LSTM-sentiment-analysis-model`
 
 - To install the required dependencies, type this in
 
