@@ -7,42 +7,8 @@ from keras.preprocessing.text import Tokenizer
 import preprocessor as p
 from sklearn.preprocessing import LabelEncoder
 from torch.nn.utils.rnn import pad_sequence
-
-class SentimentAnalysisModel(nn.Module):
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, num_layers, dropout_prob):
-        super().__init__()
-        self.embedding = nn.Embedding(vocab_size, embedding_dim)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=num_layers, batch_first=True, dropout=dropout_prob)
-        self.relu = nn.ReLU()
-        self.fc = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, text):
-        embedded = self.embedding(text)
-        lstm_out, _ = self.lstm(embedded)
-        lstm_out = lstm_out[:, -1, :]
-        lstm_out = self.relu(lstm_out)
-        output = self.fc(lstm_out)
-        output = self.relu(output)
-        return output
-
-# Define hyperparameters
-vocab_size = 10000
-embedding_dim = 32
-hidden_dim = 100
-num_classes = 4
-output_dim = num_classes
-num_layers = 4
-num_epochs = 100
-batch_size = 32
-dropout_prob = 0.6
-
-# Initialize the model
-model = SentimentAnalysisModel(vocab_size=vocab_size, embedding_dim=embedding_dim, hidden_dim=hidden_dim, output_dim=output_dim, num_layers=num_layers, dropout_prob=dropout_prob)
-print(model)
-
-# Define loss and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
+import torchtext
+from torchtext.vocab import GloVe
 
 # Load dataset
 path = 'Dataset/dataset.csv'
@@ -62,6 +28,8 @@ train_size = int(0.8 * len(df))
 test_size = len(df) - train_size
 train_text, test_text = text[:train_size], text[train_size:]
 train_labels, test_labels = labels[:train_size], labels[train_size:]
+vocab_size = 10000
+batch_size = 32
 
 # Tokenize the text
 tokenizer = Tokenizer(num_words=vocab_size)
@@ -73,6 +41,55 @@ sequences = pad_sequence([torch.tensor(seq) for seq in sequences], batch_first=T
 train_sequences = torch.tensor(sequences, dtype=torch.long)
 train_dataset = torch.utils.data.TensorDataset(train_sequences, train_labels)
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+# Load pre-trained GloVe embeddings
+glove = GloVe(name='6B', dim=50)  # You can choose different dimensions (e.g., 50, 100, 200, 300)
+embedding_dim = glove.dim
+vocab_size = len(tokenizer.word_index) + 1
+
+# Initialize the embedding layer with pre-trained embeddings
+embedding_matrix = torch.zeros(vocab_size, embedding_dim)
+for word, idx in tokenizer.word_index.items():
+    if word in glove.stoi:
+        embedding_matrix[idx] = torch.tensor(glove[word])
+
+embedding_layer = nn.Embedding.from_pretrained(embedding_matrix, freeze=False)
+
+class SentimentAnalysisModel(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, output_dim, num_layers, dropout_prob):
+        super().__init__()
+        self.embedding = embedding_layer
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, num_layers=num_layers, batch_first=True, dropout=dropout_prob)
+        self.relu = nn.ReLU()
+        self.fc = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, text):
+        embedded = self.embedding(text)
+        lstm_out, _ = self.lstm(embedded)
+        lstm_out = lstm_out[:, -1, :]
+        lstm_out = self.relu(lstm_out)
+        output = self.fc(lstm_out)
+        # output = self.relu(output)
+        return output
+
+# Define hyperparameters
+vocab_size = 10000
+embedding_dim = 50
+hidden_dim = 100
+num_classes = 4
+output_dim = num_classes
+num_layers = 4
+num_epochs = 100
+batch_size = 32
+dropout_prob = 0.2
+
+# Initialize the model
+model = SentimentAnalysisModel(vocab_size=vocab_size, embedding_dim=embedding_dim, hidden_dim=hidden_dim, output_dim=output_dim, num_layers=num_layers, dropout_prob=dropout_prob)
+print(model)
+
+# Define loss and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-4)
 
 # Train the model
 for epoch in range(num_epochs):
