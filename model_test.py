@@ -16,7 +16,6 @@ dropout_prob = 0.2
 
 # Initialize the model and move to GPU
 model = SentimentAnalysisModel(vocab_size=10000, embedding_dim=embedding_dim, hidden_dim=hidden_dim, output_dim=output_dim, num_layers=num_layers, dropout_prob=dropout_prob)
-print(model)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model.load_state_dict(torch.load('model.pt', map_location=device))
@@ -43,11 +42,12 @@ def predict_sentiment(text):
 
     return predicted_class.item()  # Get the index of the predicted class
 
-test_text = "This is a very shit movie."
+test_text = input("Enter text to predict sentiment: ")
 predicted_sentiment = predict_sentiment(test_text)
 
 # let's convert the class index to the correct sentiment label
 sentiment_labels = {0: 'Negative', 1: 'Uncertain', 2: 'Positive', 3: 'Litigious'}
 predicted_sentiment_label = sentiment_labels[predicted_sentiment]
 
-print(f'The sentiment of "{test_text}" is "{predicted_sentiment_label}".')
+print("Text: ", test_text)
+print("Sentiment predicted: ", predicted_sentiment_label)
