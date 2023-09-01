@@ -7,8 +7,10 @@ This project aims to build a Sentiment analysis model using the LSTM(Long-Short 
 The project has the following structure:
 
 - `Dataset`: This directory contains the dataset files used for training and evaluation.
-- `model.py`: Every relevant piece of code is in this one file and to see the model in action you will run this python script.
+- `model.py`: This file contains the relevant piece of code required to run the model for inference after training.
+- `train.py`: You train the modle by running this script. If you make any hyperparam changes in the model.py file make sure to make those changes here as well.
 - `requirements.txt`: requirements file to automate the process of installing the required dependencies.
+- `model_test.py`: This is the script you'll run to test the model on your own text data.
 
 ## Dependencies
 
@@ -22,6 +24,8 @@ The project requires the following dependencies:
 - keras
 - torch
 - torchtext
+- tweet-preprocessor
+- pickle
 
 Ensure that you have the necessary dependencies installed before running the project.
 
@@ -41,10 +45,15 @@ You may install the above dependencies simply by using:
 
 - Once the dependencies are installed you are ready to train the model and evaluate its performance. If you have your own data to train the model on, you can update the code in the model.py to refer to the location of your dataset on your local machine. Be sure to update the preprocessing steps accordingly!!
 
-- Run the model through the terminal
+- Train the model run this command in the terminal
 
-    `python model.py`
+    `python train.py`
 
+- Once you've successfully trained the model, it will automatically be saved in the same directory with the name `model.pt`
+
+- Test the model on your own text data
+
+    `python model_test.py`
 
 ## Contributing
 
